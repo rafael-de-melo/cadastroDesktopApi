@@ -1,4 +1,4 @@
-﻿using Cadastro.Api.Models;
+﻿using Cadastro.Api.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cadastro.Api.Data
