@@ -1,0 +1,17 @@
+.vs/
+
+bin/
+obj/
+
+*.user
+*.suo
+
+*.db
+*.db-shm
+*.db-wal
+
+*.log
+
+.idea/
+
+.vscode/
