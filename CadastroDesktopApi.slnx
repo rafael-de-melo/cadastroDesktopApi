@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Itens de Solução/">
+    <File Path=".gitignore" />
+  </Folder>
   <Project Path="Cadastro.Api/Cadastro.Api.csproj" />
   <Project Path="Cadastro.Wpf/Cadastro.Wpf.csproj" />
 </Solution>

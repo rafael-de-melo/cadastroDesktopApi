@@ -1,7 +1,5 @@
-﻿using Cadastro.Api.Models.Entities;
-using Cadastro.Api.Models.Requests;
+﻿using Cadastro.Api.Models.Requests;
 using Cadastro.Api.Services.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cadastro.Api.Controllers
