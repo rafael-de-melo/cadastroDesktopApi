@@ -1,4 +1,5 @@
-﻿using Cadastro.Wpf.Models;
+﻿using Cadastro.Wpf.Helpers;
+using Cadastro.Wpf.Models;
 using Cadastro.Wpf.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -14,6 +15,7 @@ namespace Cadastro.Wpf.ViewModels
 
         public ObservableCollection<Pessoa> Pessoas { get; } = new ObservableCollection<Pessoa>();
         public ICollectionView PessoasView { get; }
+        public bool HasItems => Pessoas.Count > 0;
 
         public string SearchText
         {
@@ -46,10 +48,11 @@ namespace Cadastro.Wpf.ViewModels
                 IsLoading = true;
                 Pessoas.Clear();
                 var lista = await _apiService.GetPessoasAsync();
+
                 foreach (var pessoa in lista)
-                {
                     Pessoas.Add(pessoa);
-                }
+
+                OnPropertyChanged(nameof(HasItems));
             }
             finally
             {
@@ -59,29 +62,47 @@ namespace Cadastro.Wpf.ViewModels
 
         public async Task<Pessoa> CreatePessoaAsync(Pessoa pessoa)
         {
+            if (pessoa.Id == Guid.Empty)
+                pessoa.Id = Guid.NewGuid();
+
             await _apiService.CreatePessoaAsync(pessoa);
             Pessoas.Insert(0, pessoa);
+            OnPropertyChanged(nameof(HasItems));
             return pessoa;
         }
 
         public async Task UpdatePessoaAsync(Pessoa pessoa)
         {
-            await _apiService.UpdatePessoaAsync(pessoa).ConfigureAwait(false);
-            var idx = Pessoas.ToList().FindIndex(p => p.Id == pessoa.Id);
-            if (idx >= 0)
+            await _apiService.UpdatePessoaAsync(pessoa);
+
+            var existente = Pessoas.FirstOrDefault(x => x.Id == pessoa.Id);
+
+            if (existente == null)
+                return;
+
+            void Update()
             {
-                Pessoas[idx].Nome = pessoa.Nome;
-                Pessoas[idx].Sobrenome = pessoa.Sobrenome;
-                Pessoas[idx].Telefone = pessoa.Telefone;
+                existente.Nome = pessoa.Nome;
+                existente.Sobrenome = pessoa.Sobrenome;
+                existente.Telefone = pessoa.Telefone;
+
                 PessoasView.Refresh();
             }
+
+            if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+                Update();
+            else
+                System.Windows.Application.Current.Dispatcher.Invoke(Update);
         }
 
         public async Task DeletePessoaAsync(Guid id)
         {
             await _apiService.DeletePessoaAsync(id);
-            var existente = System.Linq.Enumerable.FirstOrDefault(Pessoas, p => p.Id == id);
-            if (existente != null) Pessoas.Remove(existente);
+            var pessoa = Pessoas.FirstOrDefault(x => x.Id == id);
+            if (pessoa != null)
+                Pessoas.Remove(pessoa);
+
+            OnPropertyChanged(nameof(HasItems));
         }
 
         private bool FilterPessoa(object? obj)
@@ -89,9 +110,15 @@ namespace Cadastro.Wpf.ViewModels
             if (obj is not Pessoa p) return false;
             if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
-            return p.Nome.Contains(SearchText, StringComparison.OrdinalIgnoreCase) 
-                || p.Sobrenome.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                || p.Telefone.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+            var filtro = SearchText.Trim();
+            var nomeCompleto = $"{p.Nome} {p.Sobrenome}";
+            var telefonePesquisa= TextHelper.OnlyDigits(filtro);
+            
+            return
+                p.Nome.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+                || p.Sobrenome.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+                || nomeCompleto.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+                || (!string.IsNullOrEmpty(telefonePesquisa) && p.Telefone.Contains(telefonePesquisa));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

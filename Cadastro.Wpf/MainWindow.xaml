@@ -3,6 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Cadastro de Pessoas" Height="600" Width="900"
         Background="#FFF7F8FA" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -27,59 +30,106 @@
             <Border Background="White" BorderBrush="#E6E6E6" BorderThickness="1" CornerRadius="8">
                 <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Height="36" Padding="10"
                          BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"
-                         ToolTip="Pesquisar por nome..." />
+                         ToolTip="Pesquisar por nome ou telefone..." />
             </Border>
         </Grid>
 
-        <!-- List -->
-        <ListView Grid.Row="2" ItemsSource="{Binding PessoasView}" Background="Transparent" BorderThickness="0" >
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Border Background="White" CornerRadius="8" Padding="12" Margin="0,0,0,10">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+        <Grid Grid.Row="2">
+            <!-- List -->
+            <ListView  ItemsSource="{Binding PessoasView}" Background="Transparent" BorderThickness="0" >
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                            <StackPanel Orientation="Horizontal">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="14" Foreground="#222"/>
-                                    <TextBlock Text="{Binding Sobrenome}" FontSize="12" Foreground="#666" Margin="0,4,0,0"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" FontSize="14" Foreground="#222"/>
+                                        <TextBlock Text="{Binding Sobrenome}" FontSize="12" Foreground="#666" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding TelefoneFormatado}" FontSize="13" Foreground="#444" VerticalAlignment="Center" Margin="16,0,0,0"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding Telefone}" FontSize="13" Foreground="#444" VerticalAlignment="Center" Margin="16,0,0,0"/>
-                            </StackPanel>
 
-                            <Button Grid.Column="1" Width="36" Height="36" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <TextBlock Text="⋮" FontSize="18" Foreground="#666"/>
-                                <Button.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="Editar" Tag="{Binding}" Click="OnEditar_Click"/>
-                                        <MenuItem Header="Excluir" Tag="{Binding}" Click="OnExcluir_Click"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                            </Button>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListView.ItemTemplate>
+                                <Button Grid.Column="1" Width="36" Height="36" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Click="OnMenuButton_Click" Cursor="Hand" ToolTip="Mais opções">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Opacity" Value="0.8"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Opacity" Value="1"/>
+                                                    <Setter Property="Background" Value="#EEF2F6"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter Property="Background" Value="#DDE5EC"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="⋮" FontSize="18" Foreground="#666"/>
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Editar"
+                                              Tag="{Binding}"
+                                              Click="OnEditar_Click"/>
+                                            <MenuItem Header="Excluir"
+                                              Tag="{Binding}"
+                                              Click="OnExcluir_Click"/>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
 
-            <ListView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <VirtualizingStackPanel />
-                </ItemsPanelTemplate>
-            </ListView.ItemsPanel>
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
 
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="Margin" Value="0"/>
-                    <Setter Property="BorderThickness" Value="0"/>
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    <Setter Property="Focusable" Value="False"/>
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Focusable" Value="False"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+
+            <Grid Background="#CCFFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="120" Height="4" Margin="0,0,0,8"/>
+                    <TextBlock Text="Carregando..." Foreground="#666" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding HasItems}" Value="False"/>
+                                    <Condition Binding="{Binding IsLoading}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="Nenhuma pessoa cadastrada" FontSize="16" Foreground="#999" HorizontalAlignment="Center"/>
+                <TextBlock Text="Clique em &quot;+ Novo Cadastro&quot; para começar" FontSize="13" Foreground="#BBB" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

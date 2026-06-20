@@ -1,6 +1,6 @@
-﻿using Cadastro.Wpf.Models;
+﻿using Cadastro.Wpf.Helpers;
+using Cadastro.Wpf.Models;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace Cadastro.Wpf.Views
 {
@@ -18,7 +18,7 @@ namespace Cadastro.Wpf.Views
             {
                 NomeBox.Text = existing.Nome;
                 SobrenomeBox.Text = existing.Sobrenome;
-                TelefoneBox.Text = existing.Telefone;
+                TelefoneBox.Text = existing.TelefoneFormatado;
                 ResultPessoa = new Pessoa { Id = existing.Id };
             }
             else
@@ -35,7 +35,8 @@ namespace Cadastro.Wpf.Views
 
         private void Salvar_Click(object sender, RoutedEventArgs e)
         {
-            // validação simples
+            var telefone = TextHelper.OnlyDigits(TelefoneBox.Text);
+            
             if (string.IsNullOrWhiteSpace(NomeBox.Text))
             {
                 MessageBox.Show(this, "Nome é obrigatório.", "Validação", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -43,9 +44,16 @@ namespace Cadastro.Wpf.Views
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(telefone) && telefone.Length != 10 && telefone.Length != 11)
+            {
+                MessageBox.Show(this, "O telefone deve possuir 10 ou 11 dígitos.", "Validação", MessageBoxButton.OK, MessageBoxImage.Information);
+                TelefoneBox.Focus();
+                return;
+            }
+
             ResultPessoa!.Nome = NomeBox.Text.Trim();
             ResultPessoa!.Sobrenome = SobrenomeBox.Text.Trim();
-            ResultPessoa!.Telefone = TelefoneBox.Text.Trim();
+            ResultPessoa!.Telefone = telefone;
 
             DialogResult = true;
             Close();
